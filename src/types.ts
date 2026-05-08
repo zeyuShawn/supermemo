@@ -35,7 +35,7 @@ export interface Project {
 
 export type ViewMode = 'calendar' | 'projects';
 
-export const VIEW_TYPE_CALENDAR = 'memo-calendar-view';
+export const VIEW_TYPE_CALENDAR = 'supermemo-view';
 
 export const DIARY_FOLDER = '日记';
 

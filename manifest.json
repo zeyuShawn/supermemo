@@ -1,10 +1,10 @@
 {
-  "id": "memo-calendar",
-  "name": "Memo Calendar",
+  "id": "supermemo",
+  "name": "Supermemo",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "A Fantastical-style calendar memo plugin with Apple design aesthetic",
-  "author": "Zeyu",
-  "authorUrl": "",
+  "description": "A Fantastical-style calendar memo plugin with task management, project tracking, Gantt charts, and system notifications",
+  "author": "zeyuShawn",
+  "authorUrl": "https://github.com/zeyuShawn",
   "isDesktopOnly": false
 }
