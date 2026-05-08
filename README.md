@@ -27,9 +27,13 @@
 
 ---
 
-`supermemo` is an Obsidian plugin that turns everyday notes into a low-friction memory and task hub. It can capture natural language such as `下周二14:00打球，裘德八体育馆`, extract date/time/event/place, and save the memo into `日记/YYYY-MM-DD.md` while still supporting structured tasks, projects, Gantt charts, and deadline-aware system notifications.
+`supermemo` is an Obsidian plugin that turns everyday notes into a low-friction memory and task hub. It can capture natural language such as `下周二14:00打球，丘德拔体育馆`, extract date/time/event/place, and save the memo into `日记/YYYY-MM-DD.md` while still supporting structured tasks, projects, Gantt charts, and deadline-aware system notifications.
 
 Core principle: **write naturally, stay local**. The diary you already write becomes the source of truth. No separate database, no external service, no account required.
+
+<p align="center">
+  <img src="docs/assets/obsidian-supermemo-screenshot.svg" alt="Supermemo plugin running inside Obsidian with smart capture, calendar, tasks, and project progress" width="1000">
+</p>
 
 ---
 
@@ -37,7 +41,7 @@ Core principle: **write naturally, stay local**. The diary you already write bec
 
 | Area | What the plugin supports |
 | :--- | :--- |
-| **Smart Capture** | Type or select natural language like `下周二14:00打球，裘德八体育馆`; Supermemo extracts date, time, event, and place. |
+| **Smart Capture** | Type or select natural language like `下周二14:00打球，丘德拔体育馆`; Supermemo extracts date, time, event, and place. |
 | **Calendar View** | Monthly grid with task-dot indicators, overdue markers, and day-detail panel. |
 | **Task Management** | Inline task creation with priority (high/medium/low), deadline picker, reminder scheduling, time, location, and tags. |
 | **Custom Checkboxes** | Apple-style checkboxes with instant ✓ toggle and strikethrough — no full refresh needed. |
@@ -89,7 +93,7 @@ No configuration needed.
 
 Supermemo is designed for researchers, office workers, and everyday note-takers who do not want to stop and choose a schema before writing. The product loop is intentionally short:
 
-1. **Write what you mean** — e.g. `下周二14:00打球，裘德八体育馆` or `next Friday 10am submit report @ office`.
+1. **Write what you mean** — e.g. `下周二14:00打球，丘德拔体育馆` or `next Friday 10am submit report @ office`.
 2. **Preview the extracted fields** — date, time, event, place, confidence.
 3. **Save once** — the memo lands in the correct diary file and immediately appears in calendar/project views.
 
@@ -101,7 +105,7 @@ Supported smart-capture patterns include:
 | Weekdays | `周二`, `下周二`, `next Tuesday`, `Friday` |
 | Explicit dates | `2026-06-01`, `2026年6月1日`, `6/1` |
 | Times | `14:00`, `下午2点`, `晚上7点半`, `2pm` |
-| Places | `@实验室`, `，裘德八体育馆`, `at office`, `在A301` |
+| Places | `@实验室`, `，丘德拔体育馆`, `at office`, `在A301` |
 
 <p align="center">
   <img src="docs/assets/product-architecture.svg" alt="Supermemo product architecture" width="900">
@@ -112,13 +116,13 @@ Supported smart-capture patterns include:
 ### Demo 1: Smart Capture without formatting
 
 ```text
-Input: 下周二14:00打球，裘德八体育馆
+Input: 下周二14:00打球，丘德拔体育馆
 
 Parsed preview:
 - Date: next Tuesday
 - Time: 14:00
 - Event: 打球
-- Place: 裘德八体育馆
+- Place: 丘德拔体育馆
 
 → Saved into the matching 日记/YYYY-MM-DD.md file
 → Appears instantly in the calendar with time and location chips

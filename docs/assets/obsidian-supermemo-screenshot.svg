@@ -1,0 +1,117 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Supermemo running inside Obsidian</title>
+  <desc id="desc">A stylized screenshot of the Supermemo Obsidian plugin showing calendar, smart capture, tasks, projects, and a diary note.</desc>
+  <defs>
+    <linearGradient id="windowBg" x1="0" y1="0" x2="1200" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#201a33"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="214" y1="94" x2="1138" y2="696" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fbfaff"/>
+      <stop offset="1" stop-color="#f3f4f6"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="268" y1="130" x2="1010" y2="616" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <style>
+      .ui { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+      .mono { font-family: "SFMono-Regular", Consolas, monospace; }
+      .muted { fill: #6b7280; }
+      .darkMuted { fill: #a5b4fc; }
+      .title { fill: #111827; font-weight: 850; }
+      .chip { fill: #f5f3ff; stroke: #ddd6fe; }
+      .card { fill: #ffffff; stroke: #e5e7eb; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="760" rx="44" fill="url(#windowBg)"/>
+  <g filter="url(#shadow)">
+    <rect x="46" y="44" width="1108" height="672" rx="30" fill="#171421"/>
+    <rect x="46" y="44" width="1108" height="54" rx="30" fill="#241c35"/>
+    <circle cx="82" cy="71" r="8" fill="#ff5f57"/>
+    <circle cx="109" cy="71" r="8" fill="#febc2e"/>
+    <circle cx="136" cy="71" r="8" fill="#28c840"/>
+    <text x="600" y="77" text-anchor="middle" class="ui" font-size="14" fill="#c4b5fd">Research Vault — Obsidian</text>
+
+    <rect x="46" y="98" width="162" height="618" fill="#1d172b"/>
+    <text x="74" y="140" class="ui" font-size="14" font-weight="800" fill="#ddd6fe">FILES</text>
+    <g class="ui" font-size="14" fill="#c4b5fd">
+      <text x="74" y="178">▾ 日记</text>
+      <text x="94" y="210">2026-05-12.md</text>
+      <text x="94" y="242">2026-05-20.md</text>
+      <text x="74" y="282">▾ Projects</text>
+      <text x="94" y="314">thesis.md</text>
+      <text x="94" y="346">lab-notes.md</text>
+    </g>
+    <rect x="64" y="394" width="122" height="38" rx="12" fill="#7c3aed" fill-opacity="0.24"/>
+    <text x="82" y="418" class="ui" font-size="14" font-weight="800" fill="#ffffff">📅 Supermemo</text>
+
+    <rect x="208" y="98" width="946" height="618" fill="url(#panel)"/>
+    <rect x="238" y="126" width="886" height="72" rx="22" fill="#ffffff" stroke="#e5e7eb"/>
+    <text x="268" y="157" class="ui title" font-size="26">Supermemo</text>
+    <text x="268" y="181" class="ui muted" font-size="14">Smart calendar, tasks, projects, Gantt, and reminders in one local-first Obsidian view.</text>
+    <rect x="968" y="143" width="132" height="36" rx="18" fill="url(#accent)"/>
+    <text x="1034" y="166" text-anchor="middle" class="ui" font-size="14" font-weight="800" fill="#ffffff">✨ Capture</text>
+
+    <rect x="238" y="222" width="540" height="434" rx="24" class="card"/>
+    <text x="268" y="260" class="ui title" font-size="20">May 2026</text>
+    <g class="ui" font-size="13" font-weight="800" fill="#6b7280">
+      <text x="282" y="306">Mon</text><text x="354" y="306">Tue</text><text x="426" y="306">Wed</text><text x="498" y="306">Thu</text><text x="570" y="306">Fri</text><text x="642" y="306">Sat</text><text x="714" y="306">Sun</text>
+    </g>
+    <g class="ui" font-size="15" fill="#374151">
+      <rect x="262" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="285" y="354">4</text>
+      <rect x="334" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="357" y="354">5</text>
+      <rect x="406" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="429" y="354">6</text>
+      <rect x="478" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="501" y="354">7</text>
+      <rect x="550" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="573" y="354">8</text>
+      <rect x="622" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="645" y="354">9</text>
+      <rect x="694" y="324" width="58" height="50" rx="14" fill="#f9fafb"/><text x="713" y="354">10</text>
+      <rect x="262" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="281" y="418">11</text>
+      <rect x="334" y="388" width="58" height="50" rx="14" fill="#ede9fe" stroke="#7c3aed"/><text x="353" y="418" font-weight="800" fill="#5b21b6">12</text><circle cx="376" cy="425" r="4" fill="#10b981"/>
+      <rect x="406" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="425" y="418">13</text>
+      <rect x="478" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="497" y="418">14</text>
+      <rect x="550" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="569" y="418">15</text><circle cx="592" cy="425" r="4" fill="#f59e0b"/>
+      <rect x="622" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="641" y="418">16</text>
+      <rect x="694" y="388" width="58" height="50" rx="14" fill="#f9fafb"/><text x="713" y="418">17</text>
+      <rect x="262" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="281" y="482">18</text>
+      <rect x="334" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="353" y="482">19</text>
+      <rect x="406" y="452" width="58" height="50" rx="14" fill="#fef3c7"/><text x="425" y="482">20</text><circle cx="448" cy="489" r="4" fill="#ef4444"/>
+      <rect x="478" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="497" y="482">21</text>
+      <rect x="550" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="569" y="482">22</text>
+      <rect x="622" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="641" y="482">23</text>
+      <rect x="694" y="452" width="58" height="50" rx="14" fill="#f9fafb"/><text x="713" y="482">24</text>
+    </g>
+    <rect x="262" y="536" width="490" height="88" rx="18" fill="#f8fafc" stroke="#e5e7eb"/>
+    <text x="286" y="568" class="ui title" font-size="16">May 12 details</text>
+    <rect x="286" y="584" width="66" height="26" rx="13" fill="#dcfce7"/>
+    <text x="319" y="602" text-anchor="middle" class="ui" font-size="12" font-weight="800" fill="#047857">14:00</text>
+    <text x="366" y="602" class="ui" font-size="14" fill="#374151">打球 · 丘德拔体育馆</text>
+
+    <rect x="802" y="222" width="322" height="194" rx="24" class="card"/>
+    <text x="830" y="260" class="ui title" font-size="20">Smart Capture</text>
+    <rect x="830" y="284" width="266" height="56" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/>
+    <text x="850" y="307" class="ui" font-size="14" fill="#4c1d95">下周二14:00打球，</text>
+    <text x="850" y="327" class="ui" font-size="14" fill="#4c1d95">丘德拔体育馆</text>
+    <g class="ui" font-size="12" font-weight="800">
+      <rect x="830" y="358" width="58" height="28" rx="14" class="chip"/><text x="859" y="377" text-anchor="middle" fill="#5b21b6">Date</text>
+      <rect x="896" y="358" width="58" height="28" rx="14" fill="#dcfce7"/><text x="925" y="377" text-anchor="middle" fill="#047857">Time</text>
+      <rect x="962" y="358" width="64" height="28" rx="14" fill="#fef3c7"/><text x="994" y="377" text-anchor="middle" fill="#92400e">Event</text>
+      <rect x="1034" y="358" width="62" height="28" rx="14" fill="#e0f2fe"/><text x="1065" y="377" text-anchor="middle" fill="#075985">Place</text>
+    </g>
+
+    <rect x="802" y="440" width="322" height="216" rx="24" class="card"/>
+    <text x="830" y="478" class="ui title" font-size="20">Projects &amp; tasks</text>
+    <rect x="830" y="500" width="266" height="52" rx="16" fill="#f8fafc" stroke="#e5e7eb"/>
+    <circle cx="854" cy="526" r="10" fill="#ffffff" stroke="#7c3aed" stroke-width="3"/>
+    <text x="878" y="522" class="ui" font-size="14" font-weight="800" fill="#111827">Submit paper draft</text>
+    <text x="878" y="540" class="ui" font-size="12" fill="#ef4444">High · due 2026-05-20 · 🔔3d</text>
+    <rect x="830" y="570" width="266" height="50" rx="16" fill="#ecfdf5" stroke="#bbf7d0"/>
+    <text x="854" y="601" class="ui" font-size="14" font-weight="800" fill="#065f46">project/thesis</text>
+    <rect x="966" y="589" width="104" height="10" rx="5" fill="#d1fae5"/>
+    <rect x="966" y="589" width="52" height="10" rx="5" fill="#10b981"/>
+  </g>
+</svg>

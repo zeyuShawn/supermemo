@@ -976,7 +976,7 @@ var SmartCaptureModal = class extends import_obsidian2.Modal {
     this.inputEl = contentEl.createEl("textarea", {
       cls: "mc-smart-input",
       attr: {
-        placeholder: "\u4F8B\u5982\uFF1A\u4E0B\u5468\u4E8C14:00\u6253\u7403\uFF0C\u88D8\u5FB7\u516B\u4F53\u80B2\u9986\nExample: next Tuesday 2pm play basketball @ Jude Sports Center"
+        placeholder: "\u4F8B\u5982\uFF1A\u4E0B\u5468\u4E8C14:00\u6253\u7403\uFF0C\u4E18\u5FB7\u62D4\u4F53\u80B2\u9986\nExample: next Tuesday 2pm play basketball @ Jude Sports Center"
       }
     });
     this.inputEl.value = this.options.initialText ?? "";
