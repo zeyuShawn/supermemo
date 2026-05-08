@@ -14,7 +14,7 @@ export class TaskManager {
       return { date, path, tasks: [], body: '' };
     }
 
-    const content = await this.vault.cachedRead(file);
+    const content = await this.vault.read(file);
     const parsed = parseFrontmatter(content);
 
     return {
@@ -25,13 +25,13 @@ export class TaskManager {
     };
   }
 
-  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder']): Promise<Task> {
+  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = []): Promise<Task> {
     const task: Task = {
       id: generateId(),
       text,
       done: false,
       priority,
-      tags: [],
+      tags,
     };
     if (deadline) task.deadline = deadline;
     if (reminder) task.reminder = reminder;
@@ -50,7 +50,7 @@ export class TaskManager {
       const parsed = parseFrontmatter(withFm);
       const tasks = parsed?.tasks ?? [];
       tasks.push(task);
-      return serializeFrontmatter(tasks, parsed?.body ?? '');
+      return serializeFrontmatter(tasks, parsed?.body ?? '', parsed?.yaml ?? '');
     });
 
     return task;
@@ -69,7 +69,7 @@ export class TaskManager {
       const tasks = parsed.tasks.map(t =>
         t.id === taskId ? { ...t, ...updates } : t
       );
-      return serializeFrontmatter(tasks, parsed.body);
+      return serializeFrontmatter(tasks, parsed.body, parsed.yaml);
     });
   }
 
@@ -84,7 +84,7 @@ export class TaskManager {
       if (!parsed) return content;
 
       const tasks = parsed.tasks.filter(t => t.id !== taskId);
-      return serializeFrontmatter(tasks, parsed.body);
+      return serializeFrontmatter(tasks, parsed.body, parsed.yaml);
     });
   }
 
@@ -103,7 +103,7 @@ export class TaskManager {
       const parsed = parseFrontmatter(withFm);
       if (!parsed) return content;
       const newBody = parsed.body + '\n' + text;
-      return serializeFrontmatter(parsed.tasks, newBody);
+      return serializeFrontmatter(parsed.tasks, newBody, parsed.yaml);
     });
   }
 }

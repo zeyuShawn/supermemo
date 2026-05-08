@@ -1,5 +1,5 @@
 import { Vault } from 'obsidian';
-import { Project, todayStr } from './types';
+import { addDays, dateOnlyDaysBetween, parseDateOnly, todayStr } from './types';
 import { getProjects } from './projectManager';
 
 /** Render a Gantt chart into a container element */
@@ -31,17 +31,8 @@ export async function renderGanttChart(
   }
 
   // Ensure at least 14 days range
-  const minD = new Date(minDate);
-  const maxD = new Date(maxDate);
-  const rangeDays = Math.max(
-    (maxD.getTime() - minD.getTime()) / (1000 * 60 * 60 * 24) + 1,
-    14
-  );
-
-  // Pad end date
-  const paddedEnd = new Date(minD);
-  paddedEnd.setDate(paddedEnd.getDate() + rangeDays);
-  const endStr = paddedEnd.toISOString().slice(0, 10);
+  const minD = parseDateOnly(minDate);
+  const rangeDays = Math.max(dateOnlyDaysBetween(minD, maxDate) + 1, 14);
 
   const chart = container.createDiv('mc-gantt-chart');
 
@@ -55,13 +46,12 @@ export async function renderGanttChart(
 
   // Today indicator position
   const todayPos = Math.floor(
-    (new Date(today).getTime() - minD.getTime()) / (1000 * 60 * 60 * 24)
+    dateOnlyDaysBetween(minD, today)
   );
 
   // Day labels (show every few days)
   for (let i = 0; i < totalDays; i++) {
-    const d = new Date(minD);
-    d.setDate(d.getDate() + i);
+    const d = addDays(minD, i);
     const label = d.getDate() === 1 || i === 0 || i === totalDays - 1
       ? `${d.getMonth() + 1}/${d.getDate()}`
       : (d.getDate() % 5 === 0 ? String(d.getDate()) : '');
@@ -91,14 +81,11 @@ export async function renderGanttChart(
     // Bar area
     const barArea = row.createDiv('mc-gantt-timeline-col');
 
-    const projStart = new Date(project.startDate);
-    const projEnd = new Date(project.endDate);
-
     const startOffset = Math.max(0,
-      Math.floor((projStart.getTime() - minD.getTime()) / (1000 * 60 * 60 * 24))
+      dateOnlyDaysBetween(minD, project.startDate)
     );
     const duration = Math.max(1,
-      Math.ceil((projEnd.getTime() - projStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      dateOnlyDaysBetween(project.startDate, project.endDate) + 1
     );
 
     const bar = barArea.createDiv('mc-gantt-bar');
@@ -119,10 +106,7 @@ export async function renderGanttChart(
     // Deadline marker if set
     const taskWithDeadline = project.tasks.find(t => t.task.deadline);
     if (taskWithDeadline?.task.deadline) {
-      const dlDate = new Date(taskWithDeadline.task.deadline);
-      const dlOffset = Math.floor(
-        (dlDate.getTime() - minD.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const dlOffset = dateOnlyDaysBetween(minD, taskWithDeadline.task.deadline);
       const dlMarker = barArea.createDiv('mc-gantt-deadline');
       dlMarker.style.marginLeft = `${dlOffset * dayWidth - 4}px`;
       dlMarker.setAttr('title', `Deadline: ${taskWithDeadline.task.deadline}`);

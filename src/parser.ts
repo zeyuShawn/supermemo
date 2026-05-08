@@ -2,7 +2,13 @@ import { Task } from './types';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
 
-export function parseFrontmatter(content: string): { tasks: Task[]; body: string } | null {
+export interface ParsedFrontmatter {
+  tasks: Task[];
+  body: string;
+  yaml: string;
+}
+
+export function parseFrontmatter(content: string): ParsedFrontmatter | null {
   const match = content.match(FRONTMATTER_RE);
   if (!match) {
     return null;
@@ -26,15 +32,7 @@ export function parseFrontmatter(content: string): { tasks: Task[]; body: string
     }
 
     if (inTasks && trimmed.startsWith('-')) {
-      if (currentTask && currentTask.id && currentTask.text !== undefined) {
-        tasks.push({
-          id: currentTask.id,
-          text: currentTask.text,
-          done: currentTask.done ?? false,
-          priority: currentTask.priority ?? 'medium',
-          tags: currentTask.tags ?? [],
-        });
-      }
+      pushTask(tasks, currentTask);
       currentTask = {};
       const inline = trimmed.replace(/^-\s*/, '');
       parseTaskInline(inline, currentTask);
@@ -50,31 +48,33 @@ export function parseFrontmatter(content: string): { tasks: Task[]; body: string
     }
 
     if (inTasks && !trimmed.startsWith('-') && !trimmed.startsWith('  ') && !trimmed.startsWith('\t')) {
-      if (currentTask && currentTask.id && currentTask.text !== undefined) {
-        tasks.push({
-          id: currentTask.id,
-          text: currentTask.text,
-          done: currentTask.done ?? false,
-          priority: currentTask.priority ?? 'medium',
-          tags: currentTask.tags ?? [],
-        });
-      }
+      pushTask(tasks, currentTask);
       currentTask = null;
       inTasks = false;
     }
   }
 
-  if (currentTask && currentTask.id && currentTask.text !== undefined) {
-    tasks.push({
-      id: currentTask.id,
-      text: currentTask.text,
-      done: currentTask.done ?? false,
-      priority: currentTask.priority ?? 'medium',
-      tags: currentTask.tags ?? [],
-    });
-  }
+  pushTask(tasks, currentTask);
 
-  return { tasks, body };
+  return { tasks, body, yaml: yamlBlock };
+}
+
+function pushTask(tasks: Task[], task: Partial<Task> | null): void {
+  if (!task || !task.id || task.text === undefined) return;
+  tasks.push(normalizeTask(task as Partial<Task> & Pick<Task, 'id' | 'text'>));
+}
+
+function normalizeTask(task: Partial<Task> & Pick<Task, 'id' | 'text'>): Task {
+  const normalized: Task = {
+    id: task.id,
+    text: task.text,
+    done: task.done ?? false,
+    priority: task.priority ?? 'medium',
+    tags: task.tags ?? [],
+  };
+  if (task.deadline) normalized.deadline = task.deadline;
+  if (task.reminder) normalized.reminder = task.reminder;
+  return normalized;
 }
 
 function parseTaskInline(line: string, task: Partial<Task>): void {
@@ -136,16 +136,29 @@ function parseTaskProperty(trimmed: string, task: Partial<Task>): void {
         task.reminder = value;
       }
       break;
-    case 'tags':
+    case 'tags': {
       const arrMatch = value.match(/^\[(.*)\]$/);
       if (arrMatch) {
         task.tags = arrMatch[1].split(',').map(t => t.trim().replace(/^"(.*)"$/, '$1').replace(/\\"/g, '"')).filter(Boolean);
       }
       break;
+    }
   }
 }
 
-export function serializeFrontmatter(tasks: Task[], body: string): string {
+export function serializeFrontmatter(tasks: Task[], body: string, existingYaml = ''): string {
+  const preservedYaml = removeTasksBlock(existingYaml).trimEnd();
+  const tasksYaml = serializeTasks(tasks);
+  const yamlBlock = [preservedYaml, tasksYaml].filter(Boolean).join('\n');
+
+  return yamlBlock
+    ? `---\n${yamlBlock}\n---\n${body}`
+    : `---\n---\n${body}`;
+}
+
+function serializeTasks(tasks: Task[]): string {
+  if (tasks.length === 0) return '';
+
   const yamlTasks = tasks.map(t => {
     const tags = `[${t.tags.map(x => `"${x.replace(/"/g, '\\"')}"`).join(', ')}]`;
     const deadlineLine = t.deadline ? `\n    deadline: "${t.deadline}"` : '';
@@ -153,13 +166,33 @@ export function serializeFrontmatter(tasks: Task[], body: string): string {
     return `  - id: "${t.id}"\n    text: "${t.text.replace(/"/g, '\\"')}"\n    done: ${t.done}\n    priority: ${t.priority}\n    tags: ${tags}${deadlineLine}${reminderLine}`;
   }).join('\n');
 
-  const yamlBlock = tasks.length > 0
-    ? `tasks:\n${yamlTasks}`
-    : '';
+  return `tasks:\n${yamlTasks}`;
+}
 
-  return yamlBlock
-    ? `---\n${yamlBlock}\n---\n${body}`
-    : `---\n---\n${body}`;
+function removeTasksBlock(yaml: string): string {
+  const lines = yaml.split('\n');
+  const kept: string[] = [];
+  let skippingTasks = false;
+
+  for (const line of lines) {
+    if (!skippingTasks && /^tasks:\s*$/.test(line)) {
+      skippingTasks = true;
+      continue;
+    }
+
+    if (skippingTasks) {
+      const startsNextTopLevelKey = /^\S[^:]*:\s*/.test(line);
+      if (startsNextTopLevelKey) {
+        skippingTasks = false;
+      } else {
+        continue;
+      }
+    }
+
+    kept.push(line);
+  }
+
+  return kept.join('\n');
 }
 
 export function ensureFrontmatter(content: string): string {

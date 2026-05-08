@@ -1,5 +1,5 @@
-import { ItemView, WorkspaceLeaf, Vault, Notice } from 'obsidian';
-import { VIEW_TYPE_CALENDAR, CalendarState, PRIORITY_COLORS, todayStr, Task, ViewMode, Project, ReminderOffset } from './types';
+import { ItemView, MarkdownRenderer, WorkspaceLeaf, Vault, Notice } from 'obsidian';
+import { VIEW_TYPE_CALENDAR, CalendarState, PRIORITY_COLORS, todayStr, Task, ViewMode, ReminderOffset, parseDateOnly } from './types';
 import { TaskManager } from './taskManager';
 import { diaryPath } from './scanner';
 import { getOverdueTasks, dailyTaskCounts, OverdueTask } from './reminder';
@@ -13,6 +13,7 @@ export class CalendarView extends ItemView {
   private taskManager: TaskManager;
   private overdueTasks: OverdueTask[] = [];
   private viewMode: ViewMode;
+  private refreshTimer: number | null = null;
 
   constructor(leaf: WorkspaceLeaf, vault: Vault) {
     super(leaf);
@@ -39,7 +40,25 @@ export class CalendarView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
+    this.registerEvent(this.app.vault.on('create', () => this.scheduleRefresh()));
+    this.registerEvent(this.app.vault.on('modify', () => this.scheduleRefresh()));
+    this.registerEvent(this.app.vault.on('delete', () => this.scheduleRefresh()));
     this.refresh();
+  }
+
+  async onClose(): Promise<void> {
+    if (this.refreshTimer !== null) {
+      window.clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  private scheduleRefresh(): void {
+    if (this.refreshTimer !== null) window.clearTimeout(this.refreshTimer);
+    this.refreshTimer = window.setTimeout(() => {
+      this.refreshTimer = null;
+      this.refresh();
+    }, 250);
   }
 
   async refresh(): Promise<void> {
@@ -217,7 +236,7 @@ export class CalendarView extends ItemView {
     container.empty();
 
     const dateHeader = container.createDiv('mc-date-header');
-    const d = new Date(dayData.date);
+    const d = parseDateOnly(dayData.date);
     const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months = ['January','February','March','April','May','June',
                     'July','August','September','October','November','December'];
@@ -262,14 +281,17 @@ export class CalendarView extends ItemView {
       const priorityDot = taskEl.createDiv('mc-priority-dot');
       priorityDot.style.backgroundColor = PRIORITY_COLORS[task.priority];
 
-      const textEl = taskEl.createSpan({ text: task.text, cls: 'mc-task-text' });
+      taskEl.createSpan({ text: task.text, cls: 'mc-task-text' });
 
       if (task.deadline) {
-        const dl = taskEl.createSpan({ text: `⏰ ${task.deadline}`, cls: 'mc-task-deadline' });
+        taskEl.createSpan({ text: `⏰ ${task.deadline}`, cls: 'mc-task-deadline' });
       }
       if (task.reminder) {
         const reminderLabels: Record<string, string> = { '1day': '🔔1d', '3days': '🔔3d', '1week': '🔔1w' };
         taskEl.createSpan({ text: reminderLabels[task.reminder] || '', cls: 'mc-task-reminder' });
+      }
+      for (const tag of task.tags) {
+        taskEl.createSpan({ text: `#${tag}`, cls: 'mc-task-tag' });
       }
 
       const deleteBtn = taskEl.createEl('button', { text: '×', cls: 'mc-delete-btn' });
@@ -303,18 +325,7 @@ export class CalendarView extends ItemView {
 
     if (dayData.body.trim()) {
       const bodyContent = bodySection.createDiv('mc-body-content');
-      const rendered = dayData.body
-        .replace(/\[\[([^\]]+)\]\]/g, '<a class="mc-wikilink" href="#">$1</a>')
-        .replace(/\n/g, '<br>');
-      bodyContent.innerHTML = rendered;
-
-      bodyContent.querySelectorAll('.mc-wikilink').forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const noteName = (link as HTMLElement).textContent || '';
-          (this.app as any).workspace.openLinkText(noteName, '', false);
-        });
-      });
+      await MarkdownRenderer.renderMarkdown(dayData.body, bodyContent, dayData.path, this);
     } else {
       bodySection.createDiv('mc-empty-state').setText('No work log yet. Open this file in Obsidian to write.');
     }
@@ -356,7 +367,7 @@ export class CalendarView extends ItemView {
       const dateText = taskWithDeadline?.task.deadline
         ? `${project.startDate} → ${taskWithDeadline.task.deadline} (deadline)`
         : `${project.startDate} → ${project.endDate}`;
-      const dateSpan = cardHeader.createSpan({
+      cardHeader.createSpan({
         text: dateText,
         cls: 'mc-project-dates',
       });
@@ -401,7 +412,12 @@ export class CalendarView extends ItemView {
         const dot = row.createDiv('mc-priority-dot');
         dot.style.backgroundColor = entry.task.done ? '#6bcf7f' :
           (entry.date < todayStr() ? '#ff6b6b' : '#ffd93d');
-        row.createSpan({ text: entry.date, cls: 'mc-project-task-date' });
+        const sourceBtn = row.createEl('button', { text: entry.date, cls: 'mc-project-task-date mc-link-btn' });
+        sourceBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const file = vault.getFileByPath(entry.notePath || diaryPath(entry.date));
+          if (file) (this.app as any).workspace.getLeaf().openFile(file);
+        });
         row.createSpan({
           text: entry.task.text,
           cls: entry.task.done ? 'mc-task-done' : '',
@@ -424,6 +440,8 @@ export class CalendarView extends ItemView {
   }
 
   private showAddProjectOverlay(container: HTMLElement, startDate: string): void {
+    if (container.querySelector('.mc-add-project-form')) return;
+
     const form = container.createDiv('mc-add-project-form');
 
     const title = form.createDiv('mc-form-title');
@@ -452,39 +470,44 @@ export class CalendarView extends ItemView {
     endDate.setDate(endDate.getDate() + 14);
     endInput.value = endDate.toISOString().slice(0, 10);
 
+    const hint = form.createDiv('mc-form-hint');
+    hint.setText('Creates a project-tagged memo, an initial task, and a Gantt block. Use Ctrl/⌘+Enter to save.');
+
     const btnRow = form.createDiv('mc-form-btns');
-    const submitBtn = btnRow.createEl('button', { text: 'Create', cls: 'mc-submit-btn' });
-    submitBtn.addEventListener('click', async () => {
-      if (nameInput.value.trim() && startInput.value && endInput.value) {
-        try {
-          const vault = (this.app as any).vault as Vault;
-          await createProject(vault, nameInput.value.trim(), startInput.value, endInput.value);
-          form.remove();
-          this.refresh();
-        } catch (err) {
-          new Notice(`Failed to create project: ${err}`);
-        }
-      }
-    });
-
+    const submitBtn = btnRow.createEl('button', { text: 'Create project', cls: 'mc-submit-btn' });
     const cancelBtn = btnRow.createEl('button', { text: 'Cancel', cls: 'mc-cancel-btn' });
-    cancelBtn.addEventListener('click', () => form.remove());
 
-    nameInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter' && nameInput.value.trim() && startInput.value && endInput.value) {
-        try {
-          const vault = (this.app as any).vault as Vault;
-          await createProject(vault, nameInput.value.trim(), startInput.value, endInput.value);
-          form.remove();
-          this.refresh();
-        } catch (err) {
-          new Notice(`Failed to create project: ${err}`);
-        }
+    const submit = async (): Promise<void> => {
+      if (!nameInput.value.trim() || !startInput.value || !endInput.value || submitBtn.disabled) return;
+
+      submitBtn.disabled = true;
+      submitBtn.setText('Creating…');
+      try {
+        const vault = (this.app as any).vault as Vault;
+        await createProject(vault, nameInput.value.trim(), startInput.value, endInput.value);
+        form.remove();
+        await this.refresh();
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.setText('Create project');
+        new Notice(`Failed to create project: ${err}`);
+      }
+    };
+
+    submitBtn.addEventListener('click', submit);
+    cancelBtn.addEventListener('click', () => form.remove());
+    form.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        submit();
       }
     });
+
+    nameInput.focus();
   }
 
   private showAddTaskOverlay(container: HTMLElement, date: string): void {
+    if (container.querySelector('.mc-add-task-form')) return;
+
     const form = container.createDiv('mc-add-task-form');
     const inputRow = form.createDiv('mc-task-input-row');
     const input = inputRow.createEl('input', {
@@ -499,14 +522,14 @@ export class CalendarView extends ItemView {
       <option value="low">Low</option>
     `;
 
-    const deadlineRow = form.createDiv('mc-deadline-row');
-    deadlineRow.createSpan({ text: 'Deadline:', cls: 'mc-date-label' });
-    const deadlineInput = deadlineRow.createEl('input', {
+    const metaRow = form.createDiv('mc-deadline-row');
+    metaRow.createSpan({ text: 'Deadline:', cls: 'mc-date-label' });
+    const deadlineInput = metaRow.createEl('input', {
       type: 'date',
       cls: 'mc-date-input',
     });
-    deadlineRow.createSpan({ text: 'Remind:', cls: 'mc-date-label' });
-    const reminderSelect = deadlineRow.createEl('select', { cls: 'mc-priority-select' });
+    metaRow.createSpan({ text: 'Remind:', cls: 'mc-date-label' });
+    const reminderSelect = metaRow.createEl('select', { cls: 'mc-priority-select' });
     reminderSelect.innerHTML = `
       <option value="">No reminder</option>
       <option value="1day">1 day before</option>
@@ -514,50 +537,61 @@ export class CalendarView extends ItemView {
       <option value="1week">1 week before</option>
     `;
 
+    const tagRow = form.createDiv('mc-tag-row');
+    tagRow.createSpan({ text: 'Tags:', cls: 'mc-date-label' });
+    const tagInput = tagRow.createEl('input', {
+      type: 'text',
+      placeholder: 'project/app, writing, #context',
+      cls: 'mc-task-input mc-tag-input',
+    });
+
     const btnRow = form.createDiv('mc-form-btns');
-    const submitBtn = btnRow.createEl('button', { text: 'Add', cls: 'mc-submit-btn' });
-    submitBtn.addEventListener('click', async () => {
-      if (input.value.trim()) {
-        try {
-          const deadline = deadlineInput.value || undefined;
-          const reminder = (reminderSelect.value || undefined) as ReminderOffset | undefined;
-          await this.taskManager.addTask(
-            date,
-            input.value.trim(),
-            prioritySelect.value as Task['priority'],
-            deadline,
-            reminder || undefined
-          );
-          this.refresh();
-        } catch (err) {
-          new Notice(`Failed to add task: ${err}`);
-        }
-      }
-    });
-
+    const submitBtn = btnRow.createEl('button', { text: 'Add task', cls: 'mc-submit-btn' });
     const cancelBtn = btnRow.createEl('button', { text: 'Cancel', cls: 'mc-cancel-btn' });
-    cancelBtn.addEventListener('click', () => {
-      form.remove();
-    });
 
-    input.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter' && input.value.trim()) {
-        try {
-          const deadline = deadlineInput.value || undefined;
-          const reminder = (reminderSelect.value || undefined) as ReminderOffset | undefined;
-          await this.taskManager.addTask(
-            date,
-            input.value.trim(),
-            prioritySelect.value as Task['priority'],
-            deadline,
-            reminder || undefined
-          );
-          this.refresh();
-        } catch (err) {
-          new Notice(`Failed to add task: ${err}`);
-        }
+    const submit = async (): Promise<void> => {
+      const text = input.value.trim();
+      if (!text || submitBtn.disabled) return;
+
+      submitBtn.disabled = true;
+      submitBtn.setText('Adding…');
+      try {
+        const deadline = deadlineInput.value || undefined;
+        const reminder = (reminderSelect.value || undefined) as ReminderOffset | undefined;
+        await this.taskManager.addTask(
+          date,
+          text,
+          prioritySelect.value as Task['priority'],
+          deadline,
+          reminder,
+          this.parseTagInput(tagInput.value)
+        );
+        form.remove();
+        await this.refresh();
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.setText('Add task');
+        new Notice(`Failed to add task: ${err}`);
+      }
+    };
+
+    submitBtn.addEventListener('click', submit);
+    cancelBtn.addEventListener('click', () => form.remove());
+
+    form.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        submit();
       }
     });
+
+    input.focus();
+  }
+
+  private parseTagInput(value: string): string[] {
+    return [...new Set(value
+      .split(/[ ,]+/)
+      .map(tag => tag.replace(/^#/, '').trim())
+      .filter(Boolean))];
   }
 
   private async renderReminderBanner(container: HTMLElement): Promise<void> {
