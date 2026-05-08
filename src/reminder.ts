@@ -28,7 +28,7 @@ export async function getOverdueTasks(vault: Vault): Promise<OverdueTask[]> {
     const date = file.name.replace(/\.md$/, '');
     if (date > today) continue;
 
-    const content = await vault.cachedRead(file);
+    const content = await vault.read(file);
     const parsed = parseFrontmatter(content);
     if (!parsed) continue;
 
@@ -57,7 +57,7 @@ export async function dailyTaskCounts(
   for (const file of files) {
     const day = parseInt(file.name.slice(8, 10), 10);
     if (isNaN(day)) continue;
-    const content = await vault.cachedRead(file);
+    const content = await vault.read(file);
     const taskCount = (content.match(/\n\s+-\s+id:/g) || []).length;
     if (taskCount > 0) {
       map.set(day, (map.get(day) || 0) + taskCount);
@@ -90,7 +90,7 @@ export async function checkReminders(vault: Vault): Promise<ReminderAlert[]> {
   const alerts: ReminderAlert[] = [];
 
   for (const file of files) {
-    const content = await vault.cachedRead(file);
+    const content = await vault.read(file);
     const parsed = parseFrontmatter(content);
     if (!parsed) continue;
 

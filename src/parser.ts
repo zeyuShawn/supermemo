@@ -27,13 +27,7 @@ export function parseFrontmatter(content: string): { tasks: Task[]; body: string
 
     if (inTasks && trimmed.startsWith('-')) {
       if (currentTask && currentTask.id && currentTask.text !== undefined) {
-        tasks.push({
-          id: currentTask.id,
-          text: currentTask.text,
-          done: currentTask.done ?? false,
-          priority: currentTask.priority ?? 'medium',
-          tags: currentTask.tags ?? [],
-        });
+        tasks.push(normalizeTask(currentTask));
       }
       currentTask = {};
       const inline = trimmed.replace(/^-\s*/, '');
@@ -51,13 +45,7 @@ export function parseFrontmatter(content: string): { tasks: Task[]; body: string
 
     if (inTasks && !trimmed.startsWith('-') && !trimmed.startsWith('  ') && !trimmed.startsWith('\t')) {
       if (currentTask && currentTask.id && currentTask.text !== undefined) {
-        tasks.push({
-          id: currentTask.id,
-          text: currentTask.text,
-          done: currentTask.done ?? false,
-          priority: currentTask.priority ?? 'medium',
-          tags: currentTask.tags ?? [],
-        });
+        tasks.push(normalizeTask(currentTask));
       }
       currentTask = null;
       inTasks = false;
@@ -65,16 +53,24 @@ export function parseFrontmatter(content: string): { tasks: Task[]; body: string
   }
 
   if (currentTask && currentTask.id && currentTask.text !== undefined) {
-    tasks.push({
-      id: currentTask.id,
-      text: currentTask.text,
-      done: currentTask.done ?? false,
-      priority: currentTask.priority ?? 'medium',
-      tags: currentTask.tags ?? [],
-    });
+    tasks.push(normalizeTask(currentTask));
   }
 
   return { tasks, body };
+}
+
+
+function normalizeTask(task: Partial<Task>): Task {
+  const normalized: Task = {
+    id: task.id ?? '',
+    text: task.text ?? '',
+    done: task.done ?? false,
+    priority: task.priority ?? 'medium',
+    tags: task.tags ?? [],
+  };
+  if (task.deadline) normalized.deadline = task.deadline;
+  if (task.reminder) normalized.reminder = task.reminder;
+  return normalized;
 }
 
 function parseTaskInline(line: string, task: Partial<Task>): void {
