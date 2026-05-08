@@ -1,0 +1,905 @@
+/* === Memo Calendar — Apple Design System === */
+
+.mc-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif;
+  color: var(--text-normal);
+  background: var(--background-primary);
+  overflow: hidden;
+}
+
+/* Header */
+.mc-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  user-select: none;
+}
+
+.mc-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  min-width: 200px;
+  text-align: center;
+}
+
+.mc-nav-btn {
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mc-nav-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.mc-today-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mc-today-btn:hover {
+  opacity: 0.85;
+}
+
+/* Body — left/right split */
+.mc-body {
+  display: flex;
+  flex: 1;
+  gap: 1px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+/* Left panel — calendar grid */
+.mc-left-panel {
+  flex: 0 0 320px;
+  background: var(--background-primary);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.mc-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mc-day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 0;
+}
+
+.mc-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 2px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+  font-size: 13px;
+}
+
+.mc-day-cell:hover {
+  background: var(--background-modifier-hover);
+}
+
+.mc-day-other {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.mc-day-today .mc-day-num {
+  font-weight: 700;
+  color: var(--interactive-accent);
+}
+
+.mc-day-selected {
+  background: var(--interactive-accent) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.mc-day-selected .mc-day-num {
+  color: var(--text-on-accent);
+}
+
+.mc-day-num {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.mc-day-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.mc-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+}
+
+.mc-day-selected .mc-dot {
+  background: var(--text-on-accent);
+}
+
+.mc-dot-more {
+  font-size: 8px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.mc-overdue-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff6b6b;
+}
+
+/* Right panel — day detail */
+.mc-right-panel {
+  flex: 1;
+  background: var(--background-primary);
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mc-date-header {
+  margin-bottom: 4px;
+}
+
+.mc-date-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+
+.mc-date-weekday {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.mc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mc-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mc-add-btn {
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.mc-add-btn:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.mc-edit-btn {
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.mc-edit-btn:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.mc-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mc-task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--background-secondary);
+  transition: all 0.15s ease;
+}
+
+.mc-task-item:hover {
+  filter: brightness(0.98);
+}
+
+.mc-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mc-checkbox:hover {
+  border-color: var(--interactive-accent);
+}
+
+.mc-checkbox-checked {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.mc-checkbox-checked::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mc-task-done .mc-task-text {
+  text-decoration: line-through;
+  color: var(--text-faint);
+}
+
+.mc-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mc-task-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mc-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.mc-task-item:hover .mc-delete-btn {
+  opacity: 1;
+}
+
+.mc-delete-btn:hover {
+  color: #ff6b6b;
+  background: var(--background-modifier-hover);
+}
+
+.mc-task-input {
+  flex: 1;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-normal);
+  outline: none;
+}
+
+.mc-task-input:focus {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.15);
+}
+
+.mc-priority-select {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-normal);
+  cursor: pointer;
+  min-width: 110px;
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
+.mc-submit-btn, .mc-cancel-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mc-submit-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.mc-submit-btn:hover { opacity: 0.85; }
+
+.mc-cancel-btn {
+  background: var(--background-secondary);
+  color: var(--text-muted);
+}
+
+.mc-cancel-btn:hover { background: var(--background-modifier-hover); }
+
+/* Add task form */
+.mc-add-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.mc-task-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.mc-deadline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc-divider {
+  height: 1px;
+  background: var(--background-modifier-border);
+  margin: 4px 0;
+}
+
+.mc-body-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-normal);
+}
+
+.mc-wikilink {
+  color: var(--link-color);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mc-wikilink:hover {
+  text-decoration: underline;
+}
+
+.mc-empty-state {
+  font-size: 13px;
+  color: var(--text-faint);
+  font-style: italic;
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* Reminder banner */
+.mc-reminder-banner {
+  padding: 14px 24px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.mc-reminder-overdue {
+  color: #ff6b6b;
+}
+
+.mc-reminder-today {
+  color: #ffd93d;
+}
+
+.mc-reminder-item {
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* === Frosted glass on supported browsers === */
+@supports (backdrop-filter: blur(10px)) {
+  .mc-left-panel,
+  .mc-right-panel {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+
+/* === Responsive: stack vertically on narrow screens === */
+@media (max-width: 700px) {
+  .mc-body {
+    flex-direction: column;
+  }
+
+  .mc-left-panel {
+    flex: 0 0 auto;
+  }
+}
+
+/* === Dark/Light mode fine-tuning === */
+.theme-light .mc-task-item {
+  background: rgba(0,0,0,0.03);
+}
+
+.theme-dark .mc-task-item {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Smooth transitions */
+.mc-day-cell,
+.mc-task-item,
+.mc-nav-btn,
+.mc-add-btn,
+.mc-submit-btn,
+.mc-cancel-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === View Toggle === */
+.mc-view-toggle {
+  display: flex;
+  background: var(--background-secondary);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mc-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.mc-toggle-btn:hover {
+  color: var(--text-normal);
+}
+
+.mc-toggle-active {
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* === Projects View === */
+.mc-projects-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mc-project-card {
+  background: var(--background-secondary);
+  border-radius: 14px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mc-project-card:hover {
+  filter: brightness(0.97);
+}
+
+.mc-project-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mc-project-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mc-project-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mc-project-pct {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  border-radius: 8px;
+  padding: 2px 10px;
+}
+
+.mc-project-dates {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* Progress Bar */
+.mc-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.mc-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.mc-progress-ontrack {
+  background: linear-gradient(90deg, #6bcf7f, #4ecb71);
+}
+
+.mc-progress-overdue {
+  background: linear-gradient(90deg, #ff6b6b, #e55a5a);
+}
+
+.mc-progress-done {
+  background: linear-gradient(90deg, #7c8aff, #5b6af0);
+}
+
+.mc-project-details {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mc-project-warning {
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+/* Expandable task list */
+.mc-project-tasks {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mc-project-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.mc-project-task-date {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-family: monospace;
+  min-width: 90px;
+}
+
+/* Add Project Form */
+.mc-add-project-form {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mc-form-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.mc-date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mc-date-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 36px;
+}
+
+.mc-date-input {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text-normal);
+  font-family: inherit;
+  flex: 1;
+  min-width: 120px;
+}
+
+.mc-date-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.mc-form-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Project button in work log */
+.mc-proj-btn {
+  background: var(--background-secondary);
+  border: none;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.mc-proj-btn:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+/* === Deadline indicators === */
+.mc-task-deadline {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 400;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.mc-task-reminder {
+  font-size: 10px;
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: var(--text-muted);
+}
+
+.mc-project-deadline {
+  font-size: 11px;
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+/* === Gantt Chart === */
+.mc-gantt-section {
+  margin-top: 16px;
+}
+
+.mc-gantt-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mc-gantt-chart {
+  position: relative;
+  min-width: 600px;
+  padding-bottom: 8px;
+}
+
+.mc-gantt-header-row {
+  display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.mc-gantt-label-col {
+  width: 120px;
+  min-width: 120px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-right: 12px;
+  flex-shrink: 0;
+}
+
+.mc-gantt-timeline-col {
+  display: flex;
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mc-gantt-day-cell {
+  font-size: 9px;
+  color: var(--text-faint);
+  text-align: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mc-gantt-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  height: 32px;
+}
+
+.mc-gantt-project-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mc-gantt-project-pct {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 6px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.mc-gantt-bar {
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 40px;
+  transition: filter 0.2s ease;
+  cursor: pointer;
+}
+
+.mc-gantt-bar:hover {
+  filter: brightness(1.1);
+}
+
+.mc-gantt-bar-ontrack {
+  background: linear-gradient(135deg, #6bcf7f, #4ecb71);
+}
+
+.mc-gantt-bar-overdue {
+  background: linear-gradient(135deg, #ff6b6b, #e55a5a);
+}
+
+.mc-gantt-bar-done {
+  background: linear-gradient(135deg, #7c8aff, #5b6af0);
+}
+
+.mc-gantt-today-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--interactive-accent);
+  opacity: 0.6;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mc-gantt-today-label {
+  position: absolute;
+  top: -2px;
+  left: -16px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--interactive-accent);
+  background: var(--background-primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.mc-gantt-deadline {
+  position: absolute;
+  top: 2px;
+  width: 4px;
+  height: 28px;
+  background: #ff6b6b;
+  border-radius: 2px;
+  z-index: 3;
+  cursor: pointer;
+}
