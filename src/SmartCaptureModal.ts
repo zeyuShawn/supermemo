@@ -34,7 +34,7 @@ export class SmartCaptureModal extends Modal {
     this.inputEl = contentEl.createEl('textarea', {
       cls: 'mc-smart-input',
       attr: {
-        placeholder: '例如：下周二14:00打球，裘德八体育馆\nExample: next Tuesday 2pm play basketball @ Jude Sports Center',
+        placeholder: '例如：下周二14:00打球，丘德拔体育馆\nExample: next Tuesday 2pm play basketball @ Jude Sports Center',
       },
     });
     this.inputEl.value = this.options.initialText ?? '';
