@@ -23,10 +23,10 @@ __export(main_exports, {
   default: () => MemoCalendarPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/CalendarView.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
 
 // src/types.ts
 var VIEW_TYPE_CALENDAR = "supermemo-view";
@@ -142,6 +142,12 @@ function normalizeTask(task) {
     normalized.deadline = task.deadline;
   if (task.reminder)
     normalized.reminder = task.reminder;
+  if (task.time)
+    normalized.time = task.time;
+  if (task.location)
+    normalized.location = task.location;
+  if (task.sourceText)
+    normalized.sourceText = task.sourceText;
   return normalized;
 }
 function parseTaskInline(line, task) {
@@ -202,6 +208,15 @@ function parseTaskProperty(trimmed, task) {
         task.reminder = value;
       }
       break;
+    case "time":
+      task.time = value;
+      break;
+    case "location":
+      task.location = value;
+      break;
+    case "sourceText":
+      task.sourceText = value;
+      break;
     case "tags": {
       const arrMatch = value.match(/^\[(.*)\]$/);
       if (arrMatch) {
@@ -222,20 +237,29 @@ ${body}` : `---
 ---
 ${body}`;
 }
+function escapeYamlString(value) {
+  return value.replace(/"/g, '\\"');
+}
 function serializeTasks(tasks) {
   if (tasks.length === 0)
     return "";
   const yamlTasks = tasks.map((t) => {
-    const tags = `[${t.tags.map((x) => `"${x.replace(/"/g, '\\"')}"`).join(", ")}]`;
+    const tags = `[${t.tags.map((x) => `"${escapeYamlString(x)}"`).join(", ")}]`;
     const deadlineLine = t.deadline ? `
     deadline: "${t.deadline}"` : "";
     const reminderLine = t.reminder ? `
     reminder: ${t.reminder}` : "";
-    return `  - id: "${t.id}"
-    text: "${t.text.replace(/"/g, '\\"')}"
+    const timeLine = t.time ? `
+    time: "${t.time}"` : "";
+    const locationLine = t.location ? `
+    location: "${escapeYamlString(t.location)}"` : "";
+    const sourceLine = t.sourceText ? `
+    sourceText: "${escapeYamlString(t.sourceText)}"` : "";
+    return `  - id: "${escapeYamlString(t.id)}"
+    text: "${escapeYamlString(t.text)}"
     done: ${t.done}
     priority: ${t.priority}
-    tags: ${tags}${deadlineLine}${reminderLine}`;
+    tags: ${tags}${deadlineLine}${reminderLine}${timeLine}${locationLine}${sourceLine}`;
   }).join("\n");
   return `tasks:
 ${yamlTasks}`;
@@ -289,7 +313,7 @@ var TaskManager = class {
       body: parsed?.body ?? content
     };
   }
-  async addTask(date, text, priority = "medium", deadline, reminder, tags = []) {
+  async addTask(date, text, priority = "medium", deadline, reminder, tags = [], time, location, sourceText) {
     const task = {
       id: generateId(),
       text,
@@ -301,6 +325,12 @@ var TaskManager = class {
       task.deadline = deadline;
     if (reminder)
       task.reminder = reminder;
+    if (time)
+      task.time = time;
+    if (location)
+      task.location = location;
+    if (sourceText)
+      task.sourceText = sourceText;
     const path = diaryPath(date);
     const file = this.vault.getFileByPath(path);
     if (!file) {
@@ -735,8 +765,305 @@ function parseGanttBlock(source) {
   return result;
 }
 
+// src/SmartCaptureModal.ts
+var import_obsidian2 = require("obsidian");
+
+// src/SmartMemoParser.ts
+var WEEKDAY_MAP = {
+  \u65E5: 0,
+  \u5929: 0,
+  \u4E00: 1,
+  \u4E8C: 2,
+  \u4E09: 3,
+  \u56DB: 4,
+  \u4E94: 5,
+  \u516D: 6,
+  sunday: 0,
+  sun: 0,
+  monday: 1,
+  mon: 1,
+  tuesday: 2,
+  tue: 2,
+  wednesday: 3,
+  wed: 3,
+  thursday: 4,
+  thu: 4,
+  friday: 5,
+  fri: 5,
+  saturday: 6,
+  sat: 6
+};
+function formatDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+function startOfLocalDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function nextWeekday(base, weekday) {
+  const current = base.getDay();
+  let delta = (weekday - current + 7) % 7;
+  if (delta === 0)
+    delta = 7;
+  return addDays(base, delta);
+}
+function weekdayInNextWeek(base, weekday) {
+  const mondayIndex = (base.getDay() + 6) % 7;
+  const targetMondayIndex = (weekday + 6) % 7;
+  return addDays(base, 7 - mondayIndex + targetMondayIndex);
+}
+function normalizeHour(hour, marker) {
+  const lower = marker?.toLowerCase();
+  if (!lower)
+    return hour;
+  if ((lower === "pm" || lower.includes("\u4E0B\u5348") || lower.includes("\u665A\u4E0A")) && hour < 12)
+    return hour + 12;
+  if (lower.includes("\u4E2D\u5348") && hour < 11)
+    return hour + 12;
+  if ((lower === "am" || lower.includes("\u4E0A\u5348") || lower.includes("\u65E9\u4E0A")) && hour === 12)
+    return 0;
+  return hour;
+}
+function normalizeTime(hour, minute, marker) {
+  const normalizedHour = normalizeHour(hour, marker);
+  if (normalizedHour < 0 || normalizedHour > 23 || minute < 0 || minute > 59)
+    return void 0;
+  return `${String(normalizedHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+function consume(input, matchText, matched) {
+  if (!matchText)
+    return input;
+  matched.push(matchText.trim());
+  return input.replace(matchText, " ");
+}
+function parseSmartMemo(input, baseDate = /* @__PURE__ */ new Date()) {
+  const source = input.trim();
+  const matched = [];
+  let working = source;
+  let date = todayStr();
+  let dateMatched = false;
+  let time;
+  let location;
+  const base = startOfLocalDay(baseDate);
+  const explicitDate = working.match(/\b(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})日?\b/);
+  if (explicitDate) {
+    date = formatDate(new Date(Number(explicitDate[1]), Number(explicitDate[2]) - 1, Number(explicitDate[3])));
+    working = consume(working, explicitDate[0], matched);
+    dateMatched = true;
+  }
+  if (!dateMatched) {
+    const md = working.match(/(?:^|\s)(\d{1,2})[/-](\d{1,2})(?:\s|$)/);
+    if (md) {
+      const year = base.getFullYear();
+      date = formatDate(new Date(year, Number(md[1]) - 1, Number(md[2])));
+      working = consume(working, md[0], matched);
+      dateMatched = true;
+    }
+  }
+  if (!dateMatched) {
+    const relativeRules = [
+      [/(今天|今日|today)/i, 0],
+      [/(明天|tomorrow)/i, 1],
+      [/(后天|後天|day after tomorrow)/i, 2]
+    ];
+    for (const [re, offset] of relativeRules) {
+      const m = working.match(re);
+      if (m) {
+        date = formatDate(addDays(base, offset));
+        working = consume(working, m[0], matched);
+        dateMatched = true;
+        break;
+      }
+    }
+  }
+  if (!dateMatched) {
+    const zhWeekday = working.match(/(下周|下星期|下礼拜|周|星期|礼拜)([一二三四五六日天])/);
+    if (zhWeekday) {
+      const weekday = WEEKDAY_MAP[zhWeekday[2]];
+      date = formatDate(zhWeekday[1].startsWith("\u4E0B") ? weekdayInNextWeek(base, weekday) : nextWeekday(base, weekday));
+      working = consume(working, zhWeekday[0], matched);
+      dateMatched = true;
+    }
+  }
+  if (!dateMatched) {
+    const enWeekday = working.match(/\b(next\s+)?(mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i);
+    if (enWeekday) {
+      const weekday = WEEKDAY_MAP[enWeekday[2].toLowerCase()];
+      date = formatDate(enWeekday[1] ? weekdayInNextWeek(base, weekday) : nextWeekday(base, weekday));
+      working = consume(working, enWeekday[0], matched);
+      dateMatched = true;
+    }
+  }
+  const colonTime = working.match(/(上午|早上|下午|晚上|中午)?\s*(\d{1,2})[:：](\d{2})\s*(am|pm)?/i);
+  if (colonTime) {
+    time = normalizeTime(Number(colonTime[2]), Number(colonTime[3]), colonTime[1] || colonTime[4]);
+    working = consume(working, colonTime[0], matched);
+  } else {
+    const zhTime = working.match(/(上午|早上|下午|晚上|中午)?\s*(\d{1,2})[点時时](半|\d{1,2}分?)?/);
+    if (zhTime) {
+      const minute = zhTime[3] === "\u534A" ? 30 : Number((zhTime[3] || "0").replace("\u5206", ""));
+      time = normalizeTime(Number(zhTime[2]), minute, zhTime[1]);
+      working = consume(working, zhTime[0], matched);
+    } else {
+      const enTime = working.match(/\b(\d{1,2})\s*(am|pm)\b/i);
+      if (enTime) {
+        time = normalizeTime(Number(enTime[1]), 0, enTime[2]);
+        working = consume(working, enTime[0], matched);
+      }
+    }
+  }
+  const explicitLocation = working.match(/(?:@|＠)\s*([^,，;；\n]+)/);
+  if (explicitLocation) {
+    location = explicitLocation[1].trim();
+    working = consume(working, explicitLocation[0], matched);
+  } else {
+    const delimiterLocation = working.match(/[，,]\s*([^，,;；\n]+)\s*$/);
+    if (delimiterLocation) {
+      location = delimiterLocation[1].trim();
+      working = working.slice(0, delimiterLocation.index).trim();
+      matched.push(delimiterLocation[0].trim());
+    } else {
+      const atLocation = working.match(/\b(?:at|in)\s+([^,，;；\n]+)$/i);
+      if (atLocation) {
+        location = atLocation[1].trim();
+        working = consume(working, atLocation[0], matched);
+      } else {
+        const zhLocation = working.match(/在([^,，;；\n]+)$/);
+        if (zhLocation && working.slice(0, zhLocation.index).trim().length > 0) {
+          location = zhLocation[1].trim();
+          working = consume(working, zhLocation[0], matched);
+        }
+      }
+    }
+  }
+  const title = working.replace(/[，,;；。.!！?？]+$/g, "").replace(/\s+/g, " ").trim() || source;
+  const confidence = dateMatched && time && title !== source ? "high" : dateMatched || time ? "medium" : "low";
+  return {
+    date,
+    time,
+    title,
+    location,
+    source,
+    confidence,
+    matched
+  };
+}
+function formatSmartMemoPreview(result) {
+  const bits = [result.date];
+  if (result.time)
+    bits.push(result.time);
+  bits.push(result.title);
+  if (result.location)
+    bits.push(`@ ${result.location}`);
+  return bits.join(" \xB7 ");
+}
+
+// src/SmartCaptureModal.ts
+var SmartCaptureModal = class extends import_obsidian2.Modal {
+  constructor(app, options) {
+    super(app);
+    this.options = options;
+    this.taskManager = new TaskManager(options.vault);
+  }
+  onOpen() {
+    const { contentEl, titleEl } = this;
+    titleEl.setText("Smart Capture");
+    contentEl.empty();
+    contentEl.addClass("mc-smart-modal");
+    contentEl.createEl("p", {
+      text: "Write naturally. Supermemo will extract date, time, title, and location for you.",
+      cls: "mc-smart-help"
+    });
+    this.inputEl = contentEl.createEl("textarea", {
+      cls: "mc-smart-input",
+      attr: {
+        placeholder: "\u4F8B\u5982\uFF1A\u4E0B\u5468\u4E8C14:00\u6253\u7403\uFF0C\u88D8\u5FB7\u516B\u4F53\u80B2\u9986\nExample: next Tuesday 2pm play basketball @ Jude Sports Center"
+      }
+    });
+    this.inputEl.value = this.options.initialText ?? "";
+    this.previewEl = contentEl.createDiv("mc-smart-preview");
+    const examples = contentEl.createDiv("mc-smart-examples");
+    examples.createSpan({ text: "Try: ", cls: "mc-smart-examples-label" });
+    for (const example of ["\u660E\u5929\u4E0B\u53483\u70B9\u7EC4\u4F1A\uFF0CA301", "next Friday 10am submit report @ office", "2026-06-01 09:30 \u8BBA\u6587\u5F00\u9898"]) {
+      const chip = examples.createEl("button", { text: example, cls: "mc-smart-example-chip" });
+      chip.addEventListener("click", () => {
+        this.inputEl.value = example;
+        this.updatePreview();
+        this.inputEl.focus();
+      });
+    }
+    const actions = contentEl.createDiv("mc-smart-actions");
+    const cancelBtn = actions.createEl("button", { text: "Cancel", cls: "mc-cancel-btn" });
+    this.saveBtn = actions.createEl("button", { text: "Save memo", cls: "mc-submit-btn" });
+    cancelBtn.addEventListener("click", () => this.close());
+    this.saveBtn.addEventListener("click", () => this.save());
+    this.inputEl.addEventListener("input", () => this.updatePreview());
+    this.inputEl.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        this.save();
+      }
+    });
+    this.updatePreview();
+    this.inputEl.focus();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+  updatePreview() {
+    const text = this.inputEl.value.trim();
+    this.previewEl.empty();
+    if (!text) {
+      this.previewEl.createDiv("mc-empty-state").setText("Your parsed memo preview will appear here.");
+      this.saveBtn.disabled = true;
+      return;
+    }
+    this.parsed = parseSmartMemo(text);
+    this.saveBtn.disabled = this.parsed.title.trim().length === 0;
+    const summary = this.previewEl.createDiv("mc-smart-summary");
+    summary.createSpan({ text: formatSmartMemoPreview(this.parsed), cls: "mc-smart-summary-text" });
+    summary.createSpan({ text: this.parsed.confidence, cls: `mc-smart-confidence mc-smart-confidence-${this.parsed.confidence}` });
+    const grid = this.previewEl.createDiv("mc-smart-fields");
+    this.renderField(grid, "Date", this.parsed.date);
+    this.renderField(grid, "Time", this.parsed.time ?? "\u2014");
+    this.renderField(grid, "Event", this.parsed.title);
+    this.renderField(grid, "Place", this.parsed.location ?? "\u2014");
+  }
+  renderField(container, label, value) {
+    const field = container.createDiv("mc-smart-field");
+    field.createSpan({ text: label, cls: "mc-smart-field-label" });
+    field.createSpan({ text: value, cls: "mc-smart-field-value" });
+  }
+  async save() {
+    const text = this.inputEl.value.trim();
+    if (!text || this.saveBtn.disabled)
+      return;
+    this.saveBtn.disabled = true;
+    this.saveBtn.setText("Saving\u2026");
+    try {
+      const parsed = parseSmartMemo(text);
+      await this.taskManager.addTask(
+        parsed.date,
+        parsed.title,
+        "medium",
+        parsed.date,
+        void 0,
+        [],
+        parsed.time,
+        parsed.location,
+        parsed.source
+      );
+      await this.options.onSaved?.();
+      new import_obsidian2.Notice(`Saved memo: ${formatSmartMemoPreview(parsed)}`);
+      this.close();
+    } catch (err) {
+      this.saveBtn.disabled = false;
+      this.saveBtn.setText("Save memo");
+      new import_obsidian2.Notice(`Failed to save memo: ${err}`);
+    }
+  }
+};
+
 // src/CalendarView.ts
-var CalendarView = class extends import_obsidian2.ItemView {
+var CalendarView = class extends import_obsidian3.ItemView {
   constructor(leaf, vault) {
     super(leaf);
     this.overdueTasks = [];
@@ -820,6 +1147,13 @@ var CalendarView = class extends import_obsidian2.ItemView {
         this.state.currentMonth++;
       }
       this.refresh();
+    });
+    const smartBtn = header.createEl("button", { text: "\u2728 Capture", cls: "mc-smart-btn" });
+    smartBtn.addEventListener("click", () => {
+      new SmartCaptureModal(this.app, {
+        vault: this.app.vault,
+        onSaved: () => this.refresh()
+      }).open();
     });
     const todayBtn = header.createEl("button", { text: "Today", cls: "mc-today-btn" });
     todayBtn.addEventListener("click", () => {
@@ -988,7 +1322,13 @@ var CalendarView = class extends import_obsidian2.ItemView {
       });
       const priorityDot = taskEl.createDiv("mc-priority-dot");
       priorityDot.style.backgroundColor = PRIORITY_COLORS[task.priority];
+      if (task.time) {
+        taskEl.createSpan({ text: task.time, cls: "mc-task-time" });
+      }
       taskEl.createSpan({ text: task.text, cls: "mc-task-text" });
+      if (task.location) {
+        taskEl.createSpan({ text: `\u{1F4CD} ${task.location}`, cls: "mc-task-location" });
+      }
       if (task.deadline) {
         taskEl.createSpan({ text: `\u23F0 ${task.deadline}`, cls: "mc-task-deadline" });
       }
@@ -1025,7 +1365,7 @@ var CalendarView = class extends import_obsidian2.ItemView {
     });
     if (dayData.body.trim()) {
       const bodyContent = bodySection.createDiv("mc-body-content");
-      await import_obsidian2.MarkdownRenderer.renderMarkdown(dayData.body, bodyContent, dayData.path, this);
+      await import_obsidian3.MarkdownRenderer.renderMarkdown(dayData.body, bodyContent, dayData.path, this);
     } else {
       bodySection.createDiv("mc-empty-state").setText("No work log yet. Open this file in Obsidian to write.");
     }
@@ -1159,7 +1499,7 @@ var CalendarView = class extends import_obsidian2.ItemView {
       } catch (err) {
         submitBtn.disabled = false;
         submitBtn.setText("Create project");
-        new import_obsidian2.Notice(`Failed to create project: ${err}`);
+        new import_obsidian3.Notice(`Failed to create project: ${err}`);
       }
     };
     submitBtn.addEventListener("click", submit);
@@ -1233,7 +1573,7 @@ var CalendarView = class extends import_obsidian2.ItemView {
       } catch (err) {
         submitBtn.disabled = false;
         submitBtn.setText("Add task");
-        new import_obsidian2.Notice(`Failed to add task: ${err}`);
+        new import_obsidian3.Notice(`Failed to add task: ${err}`);
       }
     };
     submitBtn.addEventListener("click", submit);
@@ -1272,7 +1612,7 @@ var CalendarView = class extends import_obsidian2.ItemView {
 
 // src/main.ts
 var REMINDER_INTERVAL_MS = 5 * 60 * 1e3;
-var MemoCalendarPlugin = class extends import_obsidian3.Plugin {
+var MemoCalendarPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this.reminderInterval = null;
@@ -1290,6 +1630,22 @@ var MemoCalendarPlugin = class extends import_obsidian3.Plugin {
       id: "open-memo-calendar",
       name: "Open Memo Calendar",
       callback: () => this.activateView()
+    });
+    this.addCommand({
+      id: "smart-capture-memo",
+      name: "Smart Capture Memo",
+      callback: () => this.openSmartCapture()
+    });
+    this.addCommand({
+      id: "smart-capture-selection",
+      name: "Smart Capture Memo from selection or current line",
+      editorCallback: (editor) => {
+        const selected = editor.getSelection().trim();
+        const currentLine = editor.getLine(editor.getCursor().line).trim();
+        this.openSmartCapture(selected || currentLine, async () => {
+          await this.activateView();
+        });
+      }
     });
     this.registerMarkdownCodeBlockProcessor("memo-gantt", async (source, el) => {
       const params = parseGanttBlock(source);
@@ -1316,6 +1672,20 @@ var MemoCalendarPlugin = class extends import_obsidian3.Plugin {
     const leaf = workspace.getLeaf(true);
     await leaf.setViewState({ type: VIEW_TYPE_CALENDAR, active: true });
     workspace.revealLeaf(leaf);
+  }
+  openSmartCapture(initialText = "", onSaved) {
+    new SmartCaptureModal(this.app, {
+      initialText,
+      vault: this.app.vault,
+      onSaved: async () => {
+        await onSaved?.();
+        for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR)) {
+          const view = leaf.view;
+          if (view instanceof CalendarView)
+            await view.refresh();
+        }
+      }
+    }).open();
   }
   async renderTaggedProjectGantt(el, ctx) {
     const file = this.app.vault.getFileByPath(ctx.sourcePath);

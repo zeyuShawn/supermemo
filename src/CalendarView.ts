@@ -5,6 +5,7 @@ import { diaryPath } from './scanner';
 import { getOverdueTasks, dailyTaskCounts, OverdueTask } from './reminder';
 import { getProjects, createProject } from './projectManager';
 import { renderGanttChart } from './GanttChart';
+import { SmartCaptureModal } from './SmartCaptureModal';
 
 export { VIEW_TYPE_CALENDAR };
 
@@ -110,6 +111,14 @@ export class CalendarView extends ItemView {
         this.state.currentMonth++;
       }
       this.refresh();
+    });
+
+    const smartBtn = header.createEl('button', { text: '✨ Capture', cls: 'mc-smart-btn' });
+    smartBtn.addEventListener('click', () => {
+      new SmartCaptureModal(this.app, {
+        vault: (this.app as any).vault as Vault,
+        onSaved: () => this.refresh(),
+      }).open();
     });
 
     const todayBtn = header.createEl('button', { text: 'Today', cls: 'mc-today-btn' });
@@ -281,7 +290,13 @@ export class CalendarView extends ItemView {
       const priorityDot = taskEl.createDiv('mc-priority-dot');
       priorityDot.style.backgroundColor = PRIORITY_COLORS[task.priority];
 
+      if (task.time) {
+        taskEl.createSpan({ text: task.time, cls: 'mc-task-time' });
+      }
       taskEl.createSpan({ text: task.text, cls: 'mc-task-text' });
+      if (task.location) {
+        taskEl.createSpan({ text: `📍 ${task.location}`, cls: 'mc-task-location' });
+      }
 
       if (task.deadline) {
         taskEl.createSpan({ text: `⏰ ${task.deadline}`, cls: 'mc-task-deadline' });

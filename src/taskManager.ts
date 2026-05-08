@@ -25,7 +25,7 @@ export class TaskManager {
     };
   }
 
-  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = []): Promise<Task> {
+  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = [], time?: string, location?: string, sourceText?: string): Promise<Task> {
     const task: Task = {
       id: generateId(),
       text,
@@ -35,6 +35,9 @@ export class TaskManager {
     };
     if (deadline) task.deadline = deadline;
     if (reminder) task.reminder = reminder;
+    if (time) task.time = time;
+    if (location) task.location = location;
+    if (sourceText) task.sourceText = sourceText;
 
     const path = diaryPath(date);
     const file = this.vault.getFileByPath(path);

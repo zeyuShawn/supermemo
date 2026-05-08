@@ -74,6 +74,9 @@ function normalizeTask(task: Partial<Task> & Pick<Task, 'id' | 'text'>): Task {
   };
   if (task.deadline) normalized.deadline = task.deadline;
   if (task.reminder) normalized.reminder = task.reminder;
+  if (task.time) normalized.time = task.time;
+  if (task.location) normalized.location = task.location;
+  if (task.sourceText) normalized.sourceText = task.sourceText;
   return normalized;
 }
 
@@ -136,6 +139,15 @@ function parseTaskProperty(trimmed: string, task: Partial<Task>): void {
         task.reminder = value;
       }
       break;
+    case 'time':
+      task.time = value;
+      break;
+    case 'location':
+      task.location = value;
+      break;
+    case 'sourceText':
+      task.sourceText = value;
+      break;
     case 'tags': {
       const arrMatch = value.match(/^\[(.*)\]$/);
       if (arrMatch) {
@@ -156,14 +168,21 @@ export function serializeFrontmatter(tasks: Task[], body: string, existingYaml =
     : `---\n---\n${body}`;
 }
 
+function escapeYamlString(value: string): string {
+  return value.replace(/"/g, '\\"');
+}
+
 function serializeTasks(tasks: Task[]): string {
   if (tasks.length === 0) return '';
 
   const yamlTasks = tasks.map(t => {
-    const tags = `[${t.tags.map(x => `"${x.replace(/"/g, '\\"')}"`).join(', ')}]`;
+    const tags = `[${t.tags.map(x => `"${escapeYamlString(x)}"`).join(', ')}]`;
     const deadlineLine = t.deadline ? `\n    deadline: "${t.deadline}"` : '';
     const reminderLine = t.reminder ? `\n    reminder: ${t.reminder}` : '';
-    return `  - id: "${t.id}"\n    text: "${t.text.replace(/"/g, '\\"')}"\n    done: ${t.done}\n    priority: ${t.priority}\n    tags: ${tags}${deadlineLine}${reminderLine}`;
+    const timeLine = t.time ? `\n    time: "${t.time}"` : '';
+    const locationLine = t.location ? `\n    location: "${escapeYamlString(t.location)}"` : '';
+    const sourceLine = t.sourceText ? `\n    sourceText: "${escapeYamlString(t.sourceText)}"` : '';
+    return `  - id: "${escapeYamlString(t.id)}"\n    text: "${escapeYamlString(t.text)}"\n    done: ${t.done}\n    priority: ${t.priority}\n    tags: ${tags}${deadlineLine}${reminderLine}${timeLine}${locationLine}${sourceLine}`;
   }).join('\n');
 
   return `tasks:\n${yamlTasks}`;

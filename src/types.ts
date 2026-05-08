@@ -8,6 +8,9 @@ export interface Task {
   tags: string[];
   deadline?: string;
   reminder?: ReminderOffset;
+  time?: string;
+  location?: string;
+  sourceText?: string;
 }
 
 export interface DayData {
