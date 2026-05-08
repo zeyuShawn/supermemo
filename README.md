@@ -50,8 +50,25 @@ Core principle: **diary-first, zero-config**. The diary you already write become
 
 ## Quick Start
 
-1. Install the plugin into `.obsidian/plugins/supermemo/`
-2. Enable it in Obsidian Settings → Community Plugins
+### One-liner install
+
+```bash
+bash -c 'for d in ~/Documents/*/.obsidian/plugins; do git clone https://github.com/zeyuShawn/supermemo.git "$d/supermemo" && exit; done'
+```
+
+This auto-discovers your Obsidian vault under `~/Documents` and clones the plugin into it.
+
+Or manually:
+
+```bash
+cd /path/to/your-vault/.obsidian/plugins
+git clone https://github.com/zeyuShawn/supermemo.git
+```
+
+Then:
+
+1. Restart Obsidian or reload plugins (Cmd+Shift+P → `Reload`)
+2. Enable **Supermemo** in Settings → Community Plugins
 3. Click the calendar ribbon icon or run `Open Supermemo` from the command palette
 4. The plugin auto-creates a `日记/` folder if it doesn't exist
 5. Click any day → `+` → write a task → Add
