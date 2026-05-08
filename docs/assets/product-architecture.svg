@@ -1,0 +1,53 @@
+<svg width="960" height="430" viewBox="0 0 960 430" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Supermemo product architecture</title>
+  <desc id="desc">Diagram of capture, parsing, storage, views, reminders and Gantt modules inside Obsidian.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="960" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="1" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="card" x1="90" y1="80" x2="810" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#eef2ff" stop-opacity="0.96"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="430" rx="34" fill="url(#panel)"/>
+  <text x="58" y="62" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="850" fill="white">Supermemo product loop</text>
+  <text x="58" y="92" font-family="Inter, Arial, sans-serif" font-size="14" fill="#c7d2fe">A local-first layer that turns plain Obsidian notes into calendar memories, tasks, projects, and timelines.</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="58" y="128" width="180" height="96" rx="20" fill="url(#card)"/>
+    <text x="82" y="164" font-size="17" font-weight="800" fill="#111827">Capture</text>
+    <text x="82" y="190" font-size="13" fill="#4b5563">Button, command palette,</text>
+    <text x="82" y="210" font-size="13" fill="#4b5563">selection/current line</text>
+
+    <rect x="286" y="128" width="180" height="96" rx="20" fill="url(#card)"/>
+    <text x="310" y="164" font-size="17" font-weight="800" fill="#111827">Smart parser</text>
+    <text x="310" y="190" font-size="13" fill="#4b5563">Date · time · event</text>
+    <text x="310" y="210" font-size="13" fill="#4b5563">location · confidence</text>
+
+    <rect x="514" y="128" width="180" height="96" rx="20" fill="url(#card)"/>
+    <text x="538" y="164" font-size="17" font-weight="800" fill="#111827">Vault storage</text>
+    <text x="538" y="190" font-size="13" fill="#4b5563">日记/YYYY-MM-DD.md</text>
+    <text x="538" y="210" font-size="13" fill="#4b5563">YAML preserved</text>
+
+    <rect x="742" y="128" width="160" height="96" rx="20" fill="url(#card)"/>
+    <text x="766" y="164" font-size="17" font-weight="800" fill="#111827">Views</text>
+    <text x="766" y="190" font-size="13" fill="#4b5563">Calendar · projects</text>
+    <text x="766" y="210" font-size="13" fill="#4b5563">Gantt · note modules</text>
+
+    <path d="M244 176H278" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round"/>
+    <path d="M472 176H506" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round"/>
+    <path d="M700 176H734" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round"/>
+
+    <rect x="180" y="286" width="210" height="78" rx="18" fill="#ecfdf5"/>
+    <text x="206" y="322" font-size="16" font-weight="800" fill="#064e3b">Cross-platform UX</text>
+    <text x="206" y="344" font-size="13" fill="#047857">Windows · macOS · Linux</text>
+
+    <rect x="438" y="286" width="210" height="78" rx="18" fill="#fef3c7"/>
+    <text x="464" y="322" font-size="16" font-weight="800" fill="#78350f">Reminder loop</text>
+    <text x="464" y="344" font-size="13" fill="#92400e">Local date-only checks</text>
+
+    <path d="M822 230C822 278 776 326 658 326" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 12"/>
+    <path d="M438 326C330 326 148 300 148 232" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 12"/>
+  </g>
+</svg>

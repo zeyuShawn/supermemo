@@ -1,9 +1,10 @@
-import { MarkdownPostProcessorContext, Plugin, WorkspaceLeaf } from 'obsidian';
+import { Editor, MarkdownPostProcessorContext, Plugin, WorkspaceLeaf } from 'obsidian';
 import { CalendarView, VIEW_TYPE_CALENDAR } from './CalendarView';
 import { ensureDiaryFolder } from './scanner';
 import { renderGanttChart, parseGanttBlock } from './GanttChart';
 import { checkReminders, fireReminderNotification, requestNotificationPermission, resetReminders } from './reminder';
 import { extractBodyTags, isProjectTag } from './projectManager';
+import { SmartCaptureModal } from './SmartCaptureModal';
 
 const REMINDER_INTERVAL_MS = 5 * 60 * 1000; // check every 5 minutes
 
@@ -26,6 +27,24 @@ export default class MemoCalendarPlugin extends Plugin {
       id: 'open-memo-calendar',
       name: 'Open Memo Calendar',
       callback: () => this.activateView(),
+    });
+
+    this.addCommand({
+      id: 'smart-capture-memo',
+      name: 'Smart Capture Memo',
+      callback: () => this.openSmartCapture(),
+    });
+
+    this.addCommand({
+      id: 'smart-capture-selection',
+      name: 'Smart Capture Memo from selection or current line',
+      editorCallback: (editor: Editor) => {
+        const selected = editor.getSelection().trim();
+        const currentLine = editor.getLine(editor.getCursor().line).trim();
+        this.openSmartCapture(selected || currentLine, async () => {
+          await this.activateView();
+        });
+      },
     });
 
     // Register code block processor for memo-gantt
@@ -67,6 +86,21 @@ export default class MemoCalendarPlugin extends Plugin {
     workspace.revealLeaf(leaf);
   }
 
+
+
+  private openSmartCapture(initialText = '', onSaved?: () => void | Promise<void>): void {
+    new SmartCaptureModal(this.app, {
+      initialText,
+      vault: this.app.vault,
+      onSaved: async () => {
+        await onSaved?.();
+        for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR)) {
+          const view = leaf.view;
+          if (view instanceof CalendarView) await view.refresh();
+        }
+      },
+    }).open();
+  }
 
   private async renderTaggedProjectGantt(
     el: HTMLElement,

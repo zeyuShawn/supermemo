@@ -1,5 +1,5 @@
 import { Vault, TFile } from 'obsidian';
-import { Task, todayStr, ReminderOffset } from './types';
+import { dateOnlyDaysBetween, Task, todayStr, ReminderOffset } from './types';
 import { scanDiaryFiles } from './scanner';
 import { parseFrontmatter } from './parser';
 
@@ -86,7 +86,6 @@ const firedReminders = new Set<string>();
 export async function checkReminders(vault: Vault): Promise<ReminderAlert[]> {
   const files = scanDiaryFiles(vault);
   const today = todayStr();
-  const todayDate = new Date(today);
   const alerts: ReminderAlert[] = [];
 
   for (const file of files) {
@@ -101,10 +100,7 @@ export async function checkReminders(vault: Vault): Promise<ReminderAlert[]> {
       const reminderKey = `${task.id}:${task.reminder}`;
       if (firedReminders.has(reminderKey)) continue;
 
-      const deadlineDate = new Date(task.deadline);
-      const daysUntil = Math.floor(
-        (deadlineDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysUntil = dateOnlyDaysBetween(today, task.deadline);
 
       const threshold = REMINDER_DAYS[task.reminder];
       if (daysUntil <= threshold && daysUntil >= 0) {

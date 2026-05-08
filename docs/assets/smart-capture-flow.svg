@@ -1,0 +1,46 @@
+<svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Supermemo smart capture flow</title>
+  <desc id="desc">Natural language is parsed into date, time, event, location and saved as a memo in an Obsidian diary note.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4f0ff"/>
+      <stop offset="1" stop-color="#e8fff1"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="122" y1="70" x2="834" y2="289" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#111827" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="960" height="360" rx="32" fill="url(#bg)"/>
+  <path d="M108 180H852" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 18"/>
+  <g filter="url(#shadow)">
+    <rect x="56" y="76" width="220" height="208" rx="24" fill="white"/>
+    <text x="86" y="120" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="#111827">Write naturally</text>
+    <rect x="86" y="146" width="160" height="78" rx="14" fill="#f5f3ff"/>
+    <text x="102" y="176" font-family="Inter, Arial, sans-serif" font-size="15" fill="#4c1d95">下周二14:00打球</text>
+    <text x="102" y="202" font-family="Inter, Arial, sans-serif" font-size="15" fill="#4c1d95">裘德八体育馆</text>
+    <text x="86" y="252" font-family="Inter, Arial, sans-serif" font-size="13" fill="#6b7280">No template. No syntax.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="370" y="76" width="220" height="208" rx="24" fill="white"/>
+    <text x="400" y="120" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="#111827">Parse intent</text>
+    <g font-family="Inter, Arial, sans-serif" font-size="14">
+      <rect x="400" y="145" width="70" height="30" rx="15" fill="#ede9fe"/><text x="416" y="165" fill="#5b21b6">Date</text>
+      <rect x="480" y="145" width="70" height="30" rx="15" fill="#dcfce7"/><text x="497" y="165" fill="#047857">Time</text>
+      <rect x="400" y="185" width="72" height="30" rx="15" fill="#fef3c7"/><text x="416" y="205" fill="#92400e">Event</text>
+      <rect x="482" y="185" width="86" height="30" rx="15" fill="#e0f2fe"/><text x="497" y="205" fill="#075985">Place</text>
+    </g>
+    <text x="400" y="252" font-family="Inter, Arial, sans-serif" font-size="13" fill="#6b7280">Runs locally in your vault.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="684" y="76" width="220" height="208" rx="24" fill="white"/>
+    <text x="714" y="120" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="#111827">Save memo</text>
+    <rect x="714" y="146" width="160" height="78" rx="14" fill="#ecfdf5"/>
+    <text x="730" y="176" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#065f46">日记/2026-05-12.md</text>
+    <text x="730" y="202" font-family="Inter, Arial, sans-serif" font-size="13" fill="#047857">14:00 · 打球 · 📍场馆</text>
+    <text x="714" y="252" font-family="Inter, Arial, sans-serif" font-size="13" fill="#6b7280">Calendar, reminders, Gantt.</text>
+  </g>
+</svg>

@@ -25,7 +25,7 @@ export class TaskManager {
     };
   }
 
-  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = []): Promise<Task> {
+  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = [], time?: string, location?: string, sourceText?: string): Promise<Task> {
     const task: Task = {
       id: generateId(),
       text,
@@ -35,6 +35,9 @@ export class TaskManager {
     };
     if (deadline) task.deadline = deadline;
     if (reminder) task.reminder = reminder;
+    if (time) task.time = time;
+    if (location) task.location = location;
+    if (sourceText) task.sourceText = sourceText;
 
     const path = diaryPath(date);
     const file = this.vault.getFileByPath(path);
@@ -50,7 +53,7 @@ export class TaskManager {
       const parsed = parseFrontmatter(withFm);
       const tasks = parsed?.tasks ?? [];
       tasks.push(task);
-      return serializeFrontmatter(tasks, parsed?.body ?? '');
+      return serializeFrontmatter(tasks, parsed?.body ?? '', parsed?.yaml ?? '');
     });
 
     return task;
@@ -69,7 +72,7 @@ export class TaskManager {
       const tasks = parsed.tasks.map(t =>
         t.id === taskId ? { ...t, ...updates } : t
       );
-      return serializeFrontmatter(tasks, parsed.body);
+      return serializeFrontmatter(tasks, parsed.body, parsed.yaml);
     });
   }
 
@@ -84,7 +87,7 @@ export class TaskManager {
       if (!parsed) return content;
 
       const tasks = parsed.tasks.filter(t => t.id !== taskId);
-      return serializeFrontmatter(tasks, parsed.body);
+      return serializeFrontmatter(tasks, parsed.body, parsed.yaml);
     });
   }
 
@@ -103,7 +106,7 @@ export class TaskManager {
       const parsed = parseFrontmatter(withFm);
       if (!parsed) return content;
       const newBody = parsed.body + '\n' + text;
-      return serializeFrontmatter(parsed.tasks, newBody);
+      return serializeFrontmatter(parsed.tasks, newBody, parsed.yaml);
     });
   }
 }

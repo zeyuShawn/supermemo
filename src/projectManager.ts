@@ -85,15 +85,8 @@ export async function getProjects(vault: Vault): Promise<Project[]> {
     const parsed = parseFrontmatter(content);
     if (!parsed) return;
 
-    const date = file.name.replace(/\.md$/, '');
+    const noteDate = isDiary ? file.name.replace(/\.md$/, '') : undefined;
     const noteProjectTags = new Set<string>();
-
-    // From task tags
-    for (const task of parsed.tasks) {
-      for (const tag of task.tags) {
-        if (isProjectTag(tag)) noteProjectTags.add(tag);
-      }
-    }
 
     // From note-level frontmatter tags
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
@@ -108,17 +101,20 @@ export async function getProjects(vault: Vault): Promise<Project[]> {
       if (isProjectTag(tag)) noteProjectTags.add(tag);
     }
 
-    // Associate tasks to projects
-    for (const projectTag of noteProjectTags) {
-      const name = projectTag.replace('project/', '');
-      if (!projectMap.has(name)) projectMap.set(name, []);
+    // Associate each task to its own project tags first. Note-level
+    // project tags are a fallback so a project note can group untagged tasks
+    // without incorrectly copying explicitly project-tagged tasks elsewhere.
+    for (const task of parsed.tasks) {
+      const taskProjectTags = task.tags.filter(isProjectTag);
+      const tagsForTask = taskProjectTags.length > 0 ? taskProjectTags : [...noteProjectTags];
 
-      if (parsed.tasks.length > 0) {
-        for (const task of parsed.tasks) {
-          const existing = projectMap.get(name)!;
-          if (!existing.some(e => e.task.id === task.id)) {
-            existing.push({ date, task, notePath: file.path });
-          }
+      for (const projectTag of tagsForTask) {
+        const name = projectTag.replace('project/', '');
+        if (!projectMap.has(name)) projectMap.set(name, []);
+
+        const existing = projectMap.get(name)!;
+        if (!existing.some(e => e.task.id === task.id && e.notePath === file.path)) {
+          existing.push({ date: noteDate ?? task.deadline ?? todayStr(), task, notePath: file.path });
         }
       }
     }
@@ -158,6 +154,31 @@ export async function getProjects(vault: Vault): Promise<Project[]> {
   return projects;
 }
 
+function addTagToFrontmatter(content: string, tag: string): string {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return content;
+
+  let yaml = match[1];
+  if (yaml.includes(tag)) return content;
+  const body = match[2] ?? '';
+  const quotedTag = `"${tag.replace(/"/g, '\\"')}"`;
+
+  if (/^tags:\s*\n/m.test(yaml)) {
+    yaml = yaml.replace(/^tags:\s*\n/m, `tags:\n  - ${quotedTag}\n`);
+  } else if (/^tags:\s*\[([^\]]*)\]\s*$/m.test(yaml)) {
+    yaml = yaml.replace(/^tags:\s*\[([^\]]*)\]\s*$/m, (_line, tags) => {
+      const prefix = String(tags).trim();
+      return `tags: [${prefix ? `${prefix}, ` : ''}${quotedTag}]`;
+    });
+  } else if (/^tags:\s*(.+)$/m.test(yaml)) {
+    yaml = yaml.replace(/^tags:\s*(.+)$/m, (_line, existing) => `tags:\n  - ${existing}\n  - ${quotedTag}`);
+  } else {
+    yaml = `tags:\n  - ${quotedTag}${yaml.trim() ? `\n${yaml}` : ''}`;
+  }
+
+  return `---\n${yaml}\n---\n${body}`;
+}
+
 export async function createProject(
   vault: Vault,
   name: string,
@@ -189,12 +210,8 @@ export async function createProject(
       const tasks = parsed?.tasks ?? [];
       tasks.push(task);
       const body = parsed?.body ?? '';
-      const updated = ensureFrontmatter(serializeFrontmatter(tasks, body));
-      const tagLine = `project/${name}`;
-      if (!updated.includes(tagLine)) {
-        return updated.replace(/^---\n/, `---\ntags:\n  - "${tagLine}"\n`);
-      }
-      return updated;
+      const updated = ensureFrontmatter(serializeFrontmatter(tasks, body, parsed?.yaml ?? ''));
+      return addTagToFrontmatter(updated, `project/${name}`);
     });
   }
 }
