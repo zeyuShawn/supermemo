@@ -1,8 +1,9 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { MarkdownPostProcessorContext, Plugin, WorkspaceLeaf } from 'obsidian';
 import { CalendarView, VIEW_TYPE_CALENDAR } from './CalendarView';
 import { ensureDiaryFolder } from './scanner';
 import { renderGanttChart, parseGanttBlock } from './GanttChart';
 import { checkReminders, fireReminderNotification, requestNotificationPermission, resetReminders } from './reminder';
+import { extractBodyTags, isProjectTag } from './projectManager';
 
 const REMINDER_INTERVAL_MS = 5 * 60 * 1000; // check every 5 minutes
 
@@ -33,6 +34,12 @@ export default class MemoCalendarPlugin extends Plugin {
       await renderGanttChart(el, this.app.vault, params.project);
     });
 
+    // Automatically show a project timeline module inside notes tagged with
+    // `project` or `project/<name>`, so notes and memos stay connected.
+    this.registerMarkdownPostProcessor(async (el, ctx) => {
+      await this.renderTaggedProjectGantt(el, ctx);
+    }, 100);
+
     // Request system notification permission
     requestNotificationPermission();
 
@@ -58,6 +65,47 @@ export default class MemoCalendarPlugin extends Plugin {
     const leaf = workspace.getLeaf(true);
     await leaf.setViewState({ type: VIEW_TYPE_CALENDAR, active: true });
     workspace.revealLeaf(leaf);
+  }
+
+
+  private async renderTaggedProjectGantt(
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+  ): Promise<void> {
+    const file = this.app.vault.getFileByPath(ctx.sourcePath);
+    if (!file || !file.extension || file.extension !== 'md') return;
+
+    const section = ctx.getSectionInfo(el);
+    if (section && section.lineStart > 0) return;
+
+    const frontmatterTags = this.normalizeTags(ctx.frontmatter?.tags ?? ctx.frontmatter?.tag);
+    const bodyTags = extractBodyTags(await this.app.vault.read(file));
+    const projectTags = [...new Set([...frontmatterTags, ...bodyTags].filter(isProjectTag))];
+    if (projectTags.length === 0) return;
+
+    // Avoid duplicating the auto module when the note already contains an
+    // explicit memo-gantt code block.
+    if (el.querySelector('.block-language-memo-gantt, .mc-note-gantt-module')) return;
+
+    const projectFilter = projectTags.find(tag => tag.startsWith('project/'))?.replace('project/', '');
+    const module = el.createDiv('mc-note-gantt-module');
+    const header = module.createDiv('mc-note-gantt-header');
+    header.createSpan({ text: projectFilter ? `Project timeline · ${projectFilter}` : 'Project timeline', cls: 'mc-section-label' });
+    const chart = module.createDiv('mc-gantt-container');
+    await renderGanttChart(chart, this.app.vault, projectFilter);
+  }
+
+  private normalizeTags(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.map(String).map(tag => tag.replace(/^#/, '').trim()).filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value
+        .split(/[ ,]+/)
+        .map(tag => tag.replace(/^#/, '').trim())
+        .filter(Boolean);
+    }
+    return [];
   }
 
   private startReminderCheck(): void {

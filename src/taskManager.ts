@@ -14,7 +14,7 @@ export class TaskManager {
       return { date, path, tasks: [], body: '' };
     }
 
-    const content = await this.vault.cachedRead(file);
+    const content = await this.vault.read(file);
     const parsed = parseFrontmatter(content);
 
     return {
@@ -25,13 +25,13 @@ export class TaskManager {
     };
   }
 
-  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder']): Promise<Task> {
+  async addTask(date: string, text: string, priority: Task['priority'] = 'medium', deadline?: string, reminder?: Task['reminder'], tags: string[] = []): Promise<Task> {
     const task: Task = {
       id: generateId(),
       text,
       done: false,
       priority,
-      tags: [],
+      tags,
     };
     if (deadline) task.deadline = deadline;
     if (reminder) task.reminder = reminder;

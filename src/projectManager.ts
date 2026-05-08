@@ -7,7 +7,7 @@ import { parseFrontmatter, serializeFrontmatter, ensureFrontmatter } from './par
  * Extract note-level tags from YAML frontmatter.
  * Handles: `tags: foo`, `tags: [a, b]`, `tags:\n  - a\n  - b`, `tag: foo`
  */
-function extractNoteTags(yamlBlock: string): string[] {
+export function extractNoteTags(yamlBlock: string): string[] {
   const tags: string[] = [];
 
   // Try inline array: tags: [a, b, c]
@@ -52,7 +52,7 @@ function extractNoteTags(yamlBlock: string): string[] {
  * Extract inline tags from note body.
  * Matches #project, #project/foo, #tag/subtag etc.
  */
-function extractBodyTags(body: string): string[] {
+export function extractBodyTags(body: string): string[] {
   const tags: string[] = [];
   const re = /#([\w-]+(?:\/[\w-]+)*)/g;
   let match;
@@ -62,7 +62,7 @@ function extractBodyTags(body: string): string[] {
   return tags;
 }
 
-function isProjectTag(tag: string): boolean {
+export function isProjectTag(tag: string): boolean {
   return tag === 'project' || tag.startsWith('project/');
 }
 
@@ -81,7 +81,7 @@ export async function getProjects(vault: Vault): Promise<Project[]> {
   const allFiles = vault.getMarkdownFiles();
 
   async function processFile(file: TFile, isDiary: boolean): Promise<void> {
-    const content = await vault.cachedRead(file);
+    const content = await vault.read(file);
     const parsed = parseFrontmatter(content);
     if (!parsed) return;
 

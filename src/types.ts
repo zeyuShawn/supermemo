@@ -26,7 +26,7 @@ export interface CalendarState {
 export interface Project {
   name: string;
   tag: string;
-  tasks: { date: string; task: Task }[];
+  tasks: { date: string; task: Task; notePath?: string }[];
   startDate: string;
   endDate: string;
   doneCount: number;
