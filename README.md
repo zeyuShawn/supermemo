@@ -1,5 +1,10 @@
 <div align="center">
 
+<p>
+  <a href="README.md">English</a> |
+  <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 # Supermemo
 
 <p>
